@@ -1,0 +1,3 @@
+[submodule "external/PVR"]
+	path = external/PVR
+	url = https://github.com/mbucchia/PVR.git
