@@ -102,6 +102,33 @@ namespace util {
         }
     }
 
+    namespace {
+
+        std::ofstream g_logStream;
+
+        // Utility logging function.
+        void InternalLog(const char* fmt, va_list va) {
+            const std::time_t now = std::time(nullptr);
+
+            char buf[1024];
+            size_t offset = std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S %z: ", std::localtime(&now));
+            vsnprintf_s(buf + offset, sizeof(buf) - offset, _TRUNCATE, fmt, va);
+            OutputDebugStringA(buf);
+            if (g_logStream.is_open()) {
+                g_logStream << buf;
+                g_logStream.flush();
+            }
+        }
+
+    } // namespace
+
+    void Log(const char* fmt, ...) {
+        va_list va;
+        va_start(va, fmt);
+        InternalLog(fmt, va);
+        va_end(va);
+    }
+
 } // namespace util
 
 namespace {
@@ -175,6 +202,8 @@ namespace {
         const auto& result = g_realPvrInterface.initialise();
         TraceLoggingWriteStop(local, "PVR_initialize", TLArg(ToString(result).c_str(), "result"));
 
+        Log("PVR initialization: %s.\n", ToString(result).c_str());
+
         return result;
     }
 
@@ -228,6 +257,8 @@ namespace {
 
                 TraceLoggingWriteTagged(
                     local, "PVR_createHmd_getEyeDisplayInfo", TLArg(info.refresh_rate, "refresh_rate"));
+
+                Log("Detected refresh rate: %.0f Hz.\n", info.refresh_rate);
 
                 g_actualRefreshRate = info.refresh_rate;
             } else {
@@ -412,9 +443,16 @@ namespace {
                         result->createHmd = wrapper_createHmd;
                         result->endFrame = wrapper_endFrame;
                         result->setFloatConfig = wrapper_setFloatConfig;
+
+                        Log("Hooked to `%ls'.\n", modulePath.data());
                     } else {
                         TraceLoggingWriteTagged(
                             local, "PVR_getInterface_SkipOverride", TLArg(isVrServer), TLArg(isExpectedVersion));
+
+                        Log("Skipped hooking `%ls' (requested PVR version %u.%u).\n",
+                            modulePath.data(),
+                            major_ver,
+                            minor_ver);
                     }
                 }
             } else {
@@ -440,6 +478,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
     case DLL_PROCESS_ATTACH:
         TraceLoggingRegister(g_traceProvider);
         g_localAppData = std::filesystem::path(getenv("LOCALAPPDATA"));
+        g_logStream.open((g_localAppData / "Pimax-Tuner.log"), std::ios_base::ate);
+
+        Log("Built on %s %s with PVR %u.%u.\n", __DATE__, __TIME__, PVR_MAJOR_VERSION, PVR_MINOR_VERSION);
+
         break;
 
     case DLL_THREAD_ATTACH:
