@@ -158,6 +158,10 @@ namespace {
         std::optional<float> absoluteRenderMsCeiling;
         std::optional<float> keepoutRenderMsLower;
         std::optional<float> keepoutRenderMsUpper;
+        std::optional<float> pullUpRenderMsLower;
+        std::optional<float> pullUpRenderMsUpper;
+        std::optional<float> pullDownRenderMsLower;
+        std::optional<float> pullDownRenderMsUpper;
         std::optional<float> biasRenderMs;
     } g_settings;
 
@@ -189,6 +193,10 @@ namespace {
         g_settings.absoluteRenderMsCeiling = getOptionalSettingMs("frame_time_absolute_ceil_us");
         g_settings.keepoutRenderMsLower = getOptionalSettingMs("frame_time_keepout_lower_us");
         g_settings.keepoutRenderMsUpper = getOptionalSettingMs("frame_time_keepout_upper_us");
+        g_settings.pullUpRenderMsLower = getOptionalSettingMs("frame_time_pullup_lower_us");
+        g_settings.pullUpRenderMsUpper = getOptionalSettingMs("frame_time_pullup_upper_us");
+        g_settings.pullDownRenderMsLower = getOptionalSettingMs("frame_time_pulldown_lower_us");
+        g_settings.pullDownRenderMsUpper = getOptionalSettingMs("frame_time_pulldown_upper_us");
         g_settings.biasRenderMs = getOptionalSettingMs("frame_time_override_offset");
 
         g_settings.filterLength = getSetting("frame_time_filter_length").value_or(15);
@@ -341,7 +349,7 @@ namespace {
 
                 static float lastAllowedRenderMs = 0.f;
                 if (g_settings.keepoutRenderMsLower && g_settings.keepoutRenderMsUpper) {
-                    // If we are in the keepout...
+                    // If we are in the keepout zone...
                     if (g_settings.keepoutRenderMsLower.value() < val &&
                         val < g_settings.keepoutRenderMsUpper.value()) {
                         // ...snap to the lower or upper bound using the keepout zone as hysteresis.
@@ -352,6 +360,23 @@ namespace {
                         }
                     } else {
                         lastAllowedRenderMs = val;
+                    }
+                }
+
+                if (g_settings.pullUpRenderMsLower && g_settings.pullUpRenderMsUpper) {
+                    // If we are in the pullup zone...
+                    if (g_settings.pullUpRenderMsLower.value() < val && val < g_settings.pullUpRenderMsUpper.value()) {
+                        // ...snap to the upper bound.
+                        val = g_settings.pullUpRenderMsUpper.value();
+                    }
+                }
+
+                if (g_settings.pullDownRenderMsLower && g_settings.pullDownRenderMsUpper) {
+                    // If we are in the pulldown zone...
+                    if (g_settings.pullDownRenderMsLower.value() < val &&
+                        val < g_settings.pullDownRenderMsUpper.value()) {
+                        // ...snap to the lower bound.
+                        val = g_settings.pullDownRenderMsLower.value();
                     }
                 }
 
