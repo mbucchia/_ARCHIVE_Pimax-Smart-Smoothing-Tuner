@@ -59,11 +59,13 @@ jobs:
       run: |
         $pfxName = if ($env:PFX_NAME) { $env:PFX_NAME } else { "selfsigncert" };
         sign/signtool.exe sign /d "Pimax-Smart-Smoothing-Tuner" /du "https://github.com/mbucchia/Pimax-Smart-Smoothing-Tuner" /f sign/$pfxName.pfx /p "$env:PFX_PASSWORD" /v bin\x64\Release\libpvrclient64.dll
+        md output
+        copy bin\x64\Release\libpvrclient64.dll output
+        copy presets\*.reg output
 
     - name: Publish
       uses: actions/upload-artifact@v2
       with:
         name: Pimax-Smart-Smoothing-Tuner
         path: |
-          bin\x64\Release\libpvrclient64.dll
-          presets\*.reg
+          output/*
