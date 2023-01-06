@@ -64,4 +64,6 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Pimax-Smart-Smoothing-Tuner
-        path: bin\x64\Release\libpvrclient64.dll
+        path: |
+          bin\x64\Release\libpvrclient64.dll
+          presets\*.reg
