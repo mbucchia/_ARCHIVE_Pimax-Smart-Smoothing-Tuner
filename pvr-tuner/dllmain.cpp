@@ -153,7 +153,7 @@ namespace {
 
     struct {
         bool writeToCsv{false};
-        uint32_t filterLength{15};
+        uint32_t filterLength{1};
         std::optional<float> absoluteRenderMsFloor;
         std::optional<float> absoluteRenderMsCeiling;
         std::optional<float> keepoutRenderMsLower;
@@ -199,7 +199,7 @@ namespace {
         g_settings.pullDownRenderMsUpper = getOptionalSettingMs("frame_time_pulldown_upper_us");
         g_settings.biasRenderMs = getOptionalSettingMs("frame_time_override_offset");
 
-        g_settings.filterLength = getSetting("frame_time_filter_length").value_or(15);
+        g_settings.filterLength = getSetting("frame_time_filter_length").value_or(1);
         TraceLoggingWrite(g_traceProvider, "Settings", TLArg(g_settings.filterLength, "frame_time_filter_length"));
     }
 
