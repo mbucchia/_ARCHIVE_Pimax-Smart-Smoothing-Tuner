@@ -427,6 +427,7 @@ namespace {
         TraceLoggingWriteStart(local, "PVR_getInterface", TLArg(modulePathC), TLArg(major_ver), TLArg(minor_ver));
         if (!g_realPvrLibrary) {
             // The real PVR library is the one in the system folder.
+            const std::string_view pvrClientDllAltName("real" PVRCLIENT_DLL_NAME);
             const std::string_view pvrClientDllName(PVRCLIENT_DLL_NAME);
             wchar_t realPvrLibraryPath[MAX_PATH];
 
@@ -434,8 +435,17 @@ namespace {
                 !wcscat_s(realPvrLibraryPath, MAX_PATH, L"\\") &&
                 !wcscat_s(realPvrLibraryPath,
                           MAX_PATH,
-                          std::wstring(pvrClientDllName.begin(), pvrClientDllName.end()).c_str())) {
+                          std::wstring(pvrClientDllAltName.begin(), pvrClientDllAltName.end()).c_str())) {
                 *g_realPvrLibrary.put() = LoadLibrary(realPvrLibraryPath);
+            }
+            if (!g_realPvrLibrary) {
+                if (GetSystemDirectory(realPvrLibraryPath, _countof(realPvrLibraryPath)) &&
+                    !wcscat_s(realPvrLibraryPath, MAX_PATH, L"\\") &&
+                    !wcscat_s(realPvrLibraryPath,
+                              MAX_PATH,
+                              std::wstring(pvrClientDllName.begin(), pvrClientDllName.end()).c_str())) {
+                    *g_realPvrLibrary.put() = LoadLibrary(realPvrLibraryPath);
+                }
             }
         }
         if (g_realPvrLibrary) {
